@@ -17,4 +17,4 @@ You need to have node js installed (e.g. `nvm install 24.12.0`) with yarn and a 
 - Granit Kuqi
 - [Johannes Heinzl](https://github.com/jbravo94)
 - Shpresim Gashi
-- Veton Milaimi
+- [Veton Milaimi](https://github.com/vetonmilaimi)
