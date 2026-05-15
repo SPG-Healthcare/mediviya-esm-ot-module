@@ -13,7 +13,6 @@ You need to have node js installed (e.g. `nvm install 24.12.0`) with yarn and a 
 ## Credits
 
 ### Contributors (alphabetical)
-- Alfredo Dela Cruz
 - Granit Kuqi
 - [Johannes Heinzl](https://github.com/jbravo94)
 - Shpresim Gashi
