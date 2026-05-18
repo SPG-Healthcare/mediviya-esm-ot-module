@@ -37,7 +37,7 @@ import Root from './root';
 const mockUseConfig = jest.mocked(useConfig<Config>);
 
 it('renders a landing page for the Template app', () => {
-  const config: Config = { casualGreeting: false, whoToGreet: ['World'] };
+  const config: Config = { otFreezeWindowDaysInAdvance: 7 };
   mockUseConfig.mockReturnValue(config);
 
   render(<Root />);

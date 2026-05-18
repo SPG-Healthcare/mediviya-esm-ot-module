@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import dayjs from 'dayjs';
 import { showSnackbar, useStore } from '@openmrs/esm-framework';
 import { useTranslation } from 'react-i18next';
+import { useConfig } from '@openmrs/esm-framework';
 import { useSWRConfig } from 'swr';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,6 +33,7 @@ import styles from './add-actual-time-modal.scss';
 import withOtFreeze from '../../enhancers/withOtFreeze';
 import { otGlobalStore } from '../../store/globalOtStore';
 import { handleFreeze } from '../../utils/helpers';
+import { type Config } from '../../config-schema';
 
 interface AddActualTimeModalProps {
   isOtAdmin?: boolean;
@@ -85,6 +87,7 @@ const AddActualTimeModal: React.FC<AddActualTimeModalProps> = ({
   initialNotes: topInitialNotes,
 }) => {
   const { t } = useTranslation();
+  const { otFreezeWindowDaysInAdvance }: Config = useConfig();
   const { mutate } = useSWRConfig();
   const { updateSurgicalAppointment, isUpdating } = useUpdateSurgicalAppointment();
   const { otfreeze, setOtFreeze } = useStore(otGlobalStore);
@@ -195,7 +198,7 @@ const AddActualTimeModal: React.FC<AddActualTimeModalProps> = ({
     if (isOtAdmin) {
       setOtFreeze(false);
     } else {
-      setOtFreeze(handleFreeze(initialStartDatetime));
+      setOtFreeze(handleFreeze(initialStartDatetime, otFreezeWindowDaysInAdvance));
     }
   }, []);
 

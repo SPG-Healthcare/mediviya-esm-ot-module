@@ -63,7 +63,7 @@ export const formatMinutes = (minsInput?: string | number) => {
   return `${hrs} hr(s):${rem.toString().padStart(2, '0')} min(s)`;
 };
 
-export const handleFreeze = (date: string) => {
+export const handleFreeze = (date: string, freezePeriod: number) => {
   const targetDate = new Date(date);
 
   if (Number.isNaN(targetDate.getTime())) {
@@ -74,7 +74,7 @@ export const handleFreeze = (date: string) => {
   today.setHours(0, 0, 0, 0);
 
   const oneWeekFromToday = new Date(today);
-  oneWeekFromToday.setDate(oneWeekFromToday.getDate() + 7);
+  oneWeekFromToday.setDate(oneWeekFromToday.getDate() + freezePeriod);
   oneWeekFromToday.setHours(23, 59, 59, 999);
 
   const isInPast = targetDate < today;
