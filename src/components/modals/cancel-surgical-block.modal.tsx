@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useConfig } from '@openmrs/esm-framework';
 import { Button, ModalBody, ModalFooter, ModalHeader, TextInput } from '@carbon/react';
 import { navigate, showSnackbar, useStore } from '@openmrs/esm-framework';
 import { useSWRConfig } from 'swr';
@@ -9,6 +10,7 @@ import { revalidateOtData } from '../../utils/revalidateOtData';
 import withOtFreeze from '../../enhancers/withOtFreeze';
 import { otGlobalStore } from '../../store/globalOtStore';
 import { handleFreeze } from '../../utils/helpers';
+import { type Config } from '../../config-schema';
 
 interface CancelSurgicalBlockModalProps {
   closeModal: () => void;
@@ -26,6 +28,7 @@ const CancelSurgicalBlockModal = ({
   isOtAdmin,
 }: CancelSurgicalBlockModalProps) => {
   const { t } = useTranslation();
+  const { otFreezeWindowDaysInAdvance }: Config = useConfig();
   const { mutate } = useSWRConfig();
 
   const { editSurgicalBlock, isEditing, error: editError } = useEditSurgicalBlock(surgicalBlockId);
@@ -74,7 +77,7 @@ const CancelSurgicalBlockModal = ({
     if (isOtAdmin) {
       setOtFreeze(false);
     } else {
-      setOtFreeze(handleFreeze(startDatetime));
+      setOtFreeze(handleFreeze(startDatetime, otFreezeWindowDaysInAdvance));
     }
   }, []);
 

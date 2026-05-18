@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useConfig } from '@openmrs/esm-framework';
 import { TFunction } from 'i18next';
 import { useForm, Controller, FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,6 +42,7 @@ import styles from './new-surgical-block-view.scss';
 import { handleFreeze } from '../../utils/helpers';
 import { otGlobalStore } from '../../store/globalOtStore';
 import withOtFreeze from '../../enhancers/withOtFreeze';
+import { type Config } from '../../config-schema';
 
 interface NewSurgicalBlockViewProps {
   isOtAdmin?: boolean;
@@ -50,6 +52,7 @@ interface NewSurgicalBlockViewProps {
 
 const NewSurgicalBlockView: React.FC<NewSurgicalBlockViewProps> = ({ isOtAdmin, isEdit, surgicalBlock }) => {
   const { t } = useTranslation();
+  const { otFreezeWindowDaysInAdvance } : Config = useConfig();
   const { providers, isLoading: isProvidersLoading } = useProviders();
   const { locations, isLoading: isLocationsLoading } = useLocations();
   const { createSurgicalBlock, isCreating, error: createError } = useCreateSurgicalBlock();
@@ -109,7 +112,7 @@ const NewSurgicalBlockView: React.FC<NewSurgicalBlockViewProps> = ({ isOtAdmin, 
   };
 
   const onSubmit = async (data: SurgicalBlockFormData) => {
-    if (handleFreeze((data || surgicalBlock || createdBlock)?.startDatetime)) return;
+    if (handleFreeze((data || surgicalBlock || createdBlock)?.startDatetime, otFreezeWindowDaysInAdvance)) return;
     try {
       const payload = {
         provider: { uuid: data.surgeon },
@@ -234,7 +237,7 @@ const NewSurgicalBlockView: React.FC<NewSurgicalBlockViewProps> = ({ isOtAdmin, 
       setOtFreeze(false);
       return;
     }
-    setOtFreeze(handleFreeze((surgicalBlock || createdBlock)?.startDatetime));
+    setOtFreeze(handleFreeze((surgicalBlock || createdBlock)?.startDatetime, otFreezeWindowDaysInAdvance));
   }, [isEdit, isOtAdmin, surgicalBlock, createdBlock, setOtFreeze]);
 
   return (

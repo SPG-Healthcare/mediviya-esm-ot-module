@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Button, ModalBody, ModalFooter, ModalHeader, TextInput } from '@carbon/react';
 import { showSnackbar, useStore } from '@openmrs/esm-framework';
 import { useTranslation } from 'react-i18next';
+import { useConfig } from '@openmrs/esm-framework';
 import { useSWRConfig } from 'swr';
 
 import { useEditSurgicalAppointment } from '../../hooks/useEditSurgicalAppointment';
@@ -9,6 +10,7 @@ import { revalidateOtData } from '../../utils/revalidateOtData';
 import { otGlobalStore } from '../../store/globalOtStore';
 import { handleFreeze } from '../../utils/helpers';
 import withOtFreeze from '../../enhancers/withOtFreeze';
+import { type Config } from '../../config-schema';
 
 interface CancelSurgicalAppointmentModalProps {
   isOtAdmin?: boolean;
@@ -24,6 +26,7 @@ const CancelSurgicalAppointmentModal = ({
   surgicalAppointmentId,
 }: CancelSurgicalAppointmentModalProps) => {
   const { t } = useTranslation();
+  const { otFreezeWindowDaysInAdvance }: Config = useConfig();
   const { mutate } = useSWRConfig();
 
   const {
@@ -73,7 +76,7 @@ const CancelSurgicalAppointmentModal = ({
     if (isOtAdmin) {
       setOtFreeze(false);
     } else {
-      setOtFreeze(handleFreeze(startDatetime));
+      setOtFreeze(handleFreeze(startDatetime, otFreezeWindowDaysInAdvance));
     }
   }, []);
 

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import { showSnackbar, useStore } from '@openmrs/esm-framework';
 import { useTranslation } from 'react-i18next';
+import { useConfig } from '@openmrs/esm-framework';
 import { useSWRConfig } from 'swr';
 import {
   Button,
@@ -22,6 +23,7 @@ import { revalidateOtData } from '../../utils/revalidateOtData';
 import styles from './move-surgical-block-modal.scss';
 import { otGlobalStore } from '../../store/globalOtStore';
 import withOtFreeze from '../../enhancers/withOtFreeze';
+import { type Config } from '../../config-schema';
 
 interface MoveSurgicalBlockModalPayload {
   blockUuid: string;
@@ -58,6 +60,7 @@ const MoveSurgicalBlockModal: React.FC<MoveSurgicalBlockModalProps> = ({
   estTimeMinutes: topEstTimeMinutes,
 }) => {
   const { t } = useTranslation();
+  const { otFreezeWindowDaysInAdvance }: Config = useConfig();
   const { mutate } = useSWRConfig();
   const { otfreeze, setOtFreeze } = useStore(otGlobalStore);
 
@@ -171,7 +174,7 @@ const MoveSurgicalBlockModal: React.FC<MoveSurgicalBlockModalProps> = ({
     if (isOtAdmin) {
       setOtFreeze(false);
     } else {
-      setOtFreeze(handleFreeze(currentStartDatetime));
+      setOtFreeze(handleFreeze(currentStartDatetime, otFreezeWindowDaysInAdvance));
     }
   }, []);
 

@@ -21,23 +21,14 @@ import { Type, validator } from '@openmrs/esm-framework';
  *   https://openmrs.github.io/openmrs-esm-core/#/main/config?id=schema-reference
  */
 export const configSchema = {
-  casualGreeting: {
-    _type: Type.Boolean,
-    _default: false,
-    _description: 'Whether to use a casual greeting (or a formal one).',
-  },
-  whoToGreet: {
-    _type: Type.Array,
-    _default: ['World'],
-    _description: 'Who should be greeted. Names will be separated by a comma and space.',
-    _elements: {
-      _type: Type.String,
-    },
-    _validators: [validator((v) => v.length > 0, 'At least one person must be greeted.')],
+  otFreezeWindowDaysInAdvance: {
+    _type: Type.Number,
+    _default: 7,
+    _description: 'Specify how many days in advance the OT appointment booking should be frozen.',
+    _validators: [validator((v) => v >= 0, 'Cannot unfreeze past values. Enter 0 or positive number of days to freeze the schedule ahead.')],
   },
 };
 
 export type Config = {
-  casualGreeting: boolean;
-  whoToGreet: Array<string>;
+  otFreezeWindowDaysInAdvance: number;
 };

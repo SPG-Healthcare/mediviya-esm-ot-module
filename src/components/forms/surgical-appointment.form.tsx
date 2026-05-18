@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useConfig } from '@openmrs/esm-framework';
 import { Controller, useForm } from 'react-hook-form';
 import { Button, Form, Select, SelectItem, Stack, TextArea, TextInput } from '@carbon/react';
 import { ExtensionSlot, showSnackbar, useStore } from '@openmrs/esm-framework';
@@ -17,6 +18,7 @@ import styles from './surgical-appointment-form.scss';
 import { otGlobalStore } from '../../store/globalOtStore';
 import { handleFreeze } from '../../utils/helpers';
 import withOtFreeze from '../../enhancers/withOtFreeze';
+import { type Config } from '../../config-schema';
 
 interface SurgicalAppointmentFormData {
   isOtAdmin?: boolean;
@@ -29,6 +31,7 @@ interface SurgicalAppointmentFormData {
 
 const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAdmin, state, closeWorkspace }) => {
   const { t } = useTranslation();
+  const { otFreezeWindowDaysInAdvance }: Config = useConfig();
   const { mutate } = useSWRConfig();
 
   const { data: surgicalAppointmentAttributes } = useSurgicalAppointmentAttributeTypes();
@@ -257,7 +260,7 @@ const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAd
     if (isOtAdmin) {
       setOtFreeze(false);
     } else {
-      setOtFreeze(handleFreeze(state.surgicalBlock?.startDatetime));
+      setOtFreeze(handleFreeze(state.surgicalBlock?.startDatetime, otFreezeWindowDaysInAdvance));
     }
   }, []);
 
