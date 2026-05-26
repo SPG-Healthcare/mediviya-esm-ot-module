@@ -30,7 +30,12 @@ function DashboardExtension({ name, title, slot }: DashboardLinkConfig) {
 }
 
 export const createLeftPanelLink = (config: DashboardLinkConfig) => () => (
-  <BrowserRouter>
+  <BrowserRouter
+    future={{
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    }}
+  >
     <DashboardExtension {...config} />
   </BrowserRouter>
 );

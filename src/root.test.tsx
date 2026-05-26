@@ -23,29 +23,26 @@
  */
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { useConfig } from '@openmrs/esm-framework';
-import { Config } from './config-schema';
 import Root from './root';
 
-/**
- * This is an idiomatic way of dealing with mocked files. Note that
- * `useConfig` is already mocked; the Jest moduleNameMapper (see the
- * Jest config) has mapped the `@openmrs/esm-framework` import to a
- * mock file. This line just tells TypeScript that the object is, in
- * fact, a mock, and so will have methods like `mockReturnValue`.
- */
-const mockUseConfig = jest.mocked(useConfig<Config>);
+jest.mock('./pages/ot-scheduling.page', () => {
+  const React = require('react');
 
-it('renders a landing page for the Template app', () => {
-  const config: Config = { otFreezeWindowDaysInAdvance: 7 };
-  mockUseConfig.mockReturnValue(config);
+  return () => React.createElement('div', null, 'OT scheduling page');
+});
+
+jest.mock('./pages/surgical-block.page', () => {
+  const React = require('react');
+
+  return () => React.createElement('div', null, 'Surgical block page');
+});
+
+it('renders the operation theater root', () => {
+  window.spaBase = '/openmrs/spa';
+  window.history.pushState({}, '', '/openmrs/spa/home/operation-theater/ot-scheduling');
 
   render(<Root />);
 
-  expect(screen.getByRole('heading', { name: /welcome to the o3 template app/i })).toBeInTheDocument();
-  expect(screen.getByRole('heading', { name: /configuration system/i })).toBeInTheDocument();
-  expect(screen.getByRole('heading', { name: /extension system/i })).toBeInTheDocument();
-  expect(screen.getByRole('heading', { name: /data fetching/i })).toBeInTheDocument();
-  expect(screen.getByRole('heading', { name: /resources/i })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /get a patient named 'test'/i })).toBeInTheDocument();
+  expect(screen.getByRole('main')).toBeInTheDocument();
+  expect(screen.getByText('OT scheduling page')).toBeInTheDocument();
 });

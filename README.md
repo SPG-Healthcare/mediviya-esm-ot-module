@@ -10,6 +10,14 @@ You need to have node js installed (e.g. `nvm install 24.12.0`) with yarn and a 
 * Install dependencies `yarn`
 * Run locally with `yarn start --backend=http://localhost --port=8086`
 
+## Testing
+
+Run all unit tests:
+
+```bash
+yarn test
+```
+
 ## Credits
 
 ### Contributors (alphabetical)
