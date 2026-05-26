@@ -280,8 +280,6 @@ const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAd
             {surgicalAppointmentAttributes
               .sort((a, b) => a.sortWeight - b.sortWeight)
               .map((attr) => {
-                const attributeLabel = attr.name === 'otherSurgeon' ? t('other-surgeon', 'Other Surgeon') : attr.name;
-
                 if (attr.format === SurgicalAppointmentInputTypeEnum.provider) {
                   return (
                     <Controller
@@ -290,16 +288,8 @@ const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAd
                       defaultValue=""
                       render={({ field }) => {
                         return (
-                          <Select id={`select-${attr.name}`} labelText={attributeLabel} {...field}>
-                            <SelectItem
-                              key="default"
-                              value=""
-                              text={
-                                attr.name === 'otherSurgeon'
-                                  ? t('select-other-surgeon', 'Select other surgeon')
-                                  : t('select-provider', 'Select provider')
-                              }
-                            />
+                          <Select id={`select-${attr.name}`} labelText={t(attr.name, attr.name)} {...field}>
+                            <SelectItem key="default" value="" text={t(attr.name, attr.name)} />
                             {providers &&
                               providers.map((provider) => (
                                 <SelectItem key={provider.uuid} value={provider.uuid} text={provider.display} />
@@ -320,7 +310,7 @@ const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAd
                         <TextInput
                           {...field}
                           id={`write-${attr.name}`}
-                          labelText={attr.name}
+                          labelText={t(attr.name, attr.name)}
                           type={attr.name.startsWith('estTime') || attr.name === 'cleaningTime' ? 'number' : 'text'}
                           min={attr.name.startsWith('estTime') || attr.name === 'cleaningTime' ? 0 : undefined}
                         />
