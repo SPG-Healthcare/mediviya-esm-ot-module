@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useConfig } from '@openmrs/esm-framework';
 import { Controller, useForm } from 'react-hook-form';
-import { Button, Form, Select, SelectItem, Stack, TextArea, TextInput } from '@carbon/react';
+import { Button, Form, Select, SelectItem, Stack, TextInput } from '@carbon/react';
 import { ExtensionSlot, showSnackbar, useStore } from '@openmrs/esm-framework';
 import { useSWRConfig } from 'swr';
 
@@ -13,11 +13,12 @@ import { ISurgicalAppointment, ISurgicalBlock } from '../../utils/types';
 import { useEditSurgicalBlock } from '../../hooks/useEditSurgicalBlock';
 import { useEditSurgicalAppointment } from '../../hooks/useEditSurgicalAppointment';
 import { revalidateOtData } from '../../utils/revalidateOtData';
-
-import styles from './surgical-appointment-form.scss';
 import { otGlobalStore } from '../../store/globalOtStore';
 import { handleFreeze } from '../../utils/helpers';
 import withOtFreeze from '../../enhancers/withOtFreeze';
+import { SurgicalAppointmentInputTypeEnum } from '../../utils/constants';
+
+import styles from './surgical-appointment-form.scss';
 import { type Config } from '../../config-schema';
 
 interface SurgicalAppointmentFormData {
@@ -27,6 +28,21 @@ interface SurgicalAppointmentFormData {
     surgicalAppointment?: ISurgicalAppointment;
   };
   closeWorkspace?: () => void;
+}
+
+interface SurgicalAppointmentFormValues {
+  [key: string]: string;
+  patient: string;
+  procedure: string;
+  estTimeHours: string;
+  estTimeMinutes: string;
+  cleaningTime: string;
+  otherSurgeon: string;
+  surgicalAssistant: string;
+  anaesthetist: string;
+  scrubNurse: string;
+  circulatingNurse: string;
+  notes: string;
 }
 
 const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAdmin, state, closeWorkspace }) => {
@@ -46,11 +62,11 @@ const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAd
 
   const { otfreeze, setOtFreeze } = useStore(otGlobalStore);
 
-  const { control, handleSubmit, resetField, reset } = useForm({
+  const { control, handleSubmit, resetField, reset } = useForm<SurgicalAppointmentFormValues>({
     mode: 'onSubmit',
     defaultValues: {
       patient: '',
-      procedures: '',
+      procedure: '',
       estTimeHours: '',
       estTimeMinutes: '',
       cleaningTime: '',
@@ -63,7 +79,7 @@ const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAd
     },
   });
 
-  const hasAvailableSlot = (data) => {
+  const hasAvailableSlot = (data: SurgicalAppointmentFormValues) => {
     const start = state.surgicalBlock?.startDatetime ? new Date(state.surgicalBlock.startDatetime).getTime() : NaN;
     const end = state.surgicalBlock?.endDatetime ? new Date(state.surgicalBlock.endDatetime).getTime() : NaN;
 
@@ -97,7 +113,17 @@ const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAd
     return scheduledMinutes + newAppointmentMinutes <= blockDurationMinutes;
   };
 
-  const onSubmit = async (data) => {
+  const buildSurgicalAppointmentAttributesPayload = (data: SurgicalAppointmentFormValues) =>
+    surgicalAppointmentAttributes
+      .filter((attributeType) => attributeType.uuid && attributeType.name)
+      .map((attributeType) => ({
+        surgicalAppointmentAttributeType: {
+          uuid: attributeType.uuid,
+        },
+        value: data[attributeType.name] ?? '',
+      }));
+
+  async function onSubmit(data: SurgicalAppointmentFormValues) {
     if (data.patient === '') {
       showSnackbar({
         title: t('patient-required', 'Patient ID is required'),
@@ -125,68 +151,7 @@ const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAd
     }
 
     try {
-      const surgicalAppointmentAttributesPayload = [
-        {
-          surgicalAppointmentAttributeType: {
-            uuid: surgicalAppointmentAttributes.find((attr) => attr.name === 'procedure')?.uuid,
-          },
-          value: data.procedures,
-        },
-        {
-          surgicalAppointmentAttributeType: {
-            uuid: surgicalAppointmentAttributes.find((attr) => attr.name === 'otherSurgeon')?.uuid,
-          },
-          value: data.otherSurgeon,
-        },
-        {
-          surgicalAppointmentAttributeType: {
-            uuid: surgicalAppointmentAttributes.find((attr) => attr.name === 'estTimeHours')?.uuid,
-          },
-          value: data.estTimeHours,
-        },
-        {
-          surgicalAppointmentAttributeType: {
-            uuid: surgicalAppointmentAttributes.find((attr) => attr.name === 'estTimeMinutes')?.uuid,
-          },
-          value: data.estTimeMinutes,
-        },
-        {
-          surgicalAppointmentAttributeType: {
-            uuid: surgicalAppointmentAttributes.find((attr) => attr.name === 'cleaningTime')?.uuid,
-          },
-          value: data.cleaningTime,
-        },
-        {
-          surgicalAppointmentAttributeType: {
-            uuid: surgicalAppointmentAttributes.find((attr) => attr.name === 'surgicalAssistant')?.uuid,
-          },
-          value: data.surgicalAssistant,
-        },
-        {
-          surgicalAppointmentAttributeType: {
-            uuid: surgicalAppointmentAttributes.find((attr) => attr.name === 'anaesthetist')?.uuid,
-          },
-          value: data.anaesthetist,
-        },
-        {
-          surgicalAppointmentAttributeType: {
-            uuid: surgicalAppointmentAttributes.find((attr) => attr.name === 'scrubNurse')?.uuid,
-          },
-          value: data.scrubNurse,
-        },
-        {
-          surgicalAppointmentAttributeType: {
-            uuid: surgicalAppointmentAttributes.find((attr) => attr.name === 'circulatingNurse')?.uuid,
-          },
-          value: data.circulatingNurse,
-        },
-        {
-          surgicalAppointmentAttributeType: {
-            uuid: surgicalAppointmentAttributes.find((attr) => attr.name === 'notes')?.uuid,
-          },
-          value: data.notes,
-        },
-      ];
+      const surgicalAppointmentAttributesPayload = buildSurgicalAppointmentAttributesPayload(data);
 
       const editSurgicalAppointmentAttributesPayload = surgicalAppointmentAttributesPayload.map((attribute) => {
         const existingAttribute = state?.surgicalAppointment?.surgicalAppointmentAttributes?.find(
@@ -209,7 +174,7 @@ const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAd
         provider: { uuid: state.surgicalBlock?.provider.uuid },
         startDatetime: state.surgicalBlock?.startDatetime,
         endDatetime: state.surgicalBlock?.endDatetime,
-        surgicalAppointments: [surgicalAppointment as ISurgicalAppointment],
+        surgicalAppointments: [surgicalAppointment],
       };
 
       const editedSurgicalAppointment = {
@@ -254,7 +219,7 @@ const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAd
         isLowContrast: true,
       });
     }
-  };
+  }
 
   useEffect(() => {
     if (isOtAdmin) {
@@ -271,49 +236,28 @@ const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAd
   useEffect(() => {
     if (state.surgicalAppointment) {
       setPatientId(state.surgicalAppointment.patient?.uuid || '');
-      reset({
+
+      const appointmentAttrs = state.surgicalAppointment.surgicalAppointmentAttributes ?? [];
+      const dynamicDefaults: Record<string, any> = {
         patient: state.surgicalAppointment.patient?.uuid || '',
-        procedures:
-          state.surgicalAppointment.surgicalAppointmentAttributes?.find(
-            (attr) => attr.surgicalAppointmentAttributeType?.name === 'procedure',
-          )?.value || '',
-        otherSurgeon:
-          state.surgicalAppointment.surgicalAppointmentAttributes?.find(
-            (attr) => attr.surgicalAppointmentAttributeType?.name === 'otherSurgeon',
-          )?.value || '',
-        estTimeHours:
-          state.surgicalAppointment.surgicalAppointmentAttributes?.find(
-            (attr) => attr.surgicalAppointmentAttributeType?.name === 'estTimeHours',
-          )?.value || '',
-        estTimeMinutes:
-          state.surgicalAppointment.surgicalAppointmentAttributes?.find(
-            (attr) => attr.surgicalAppointmentAttributeType?.name === 'estTimeMinutes',
-          )?.value || '',
-        cleaningTime:
-          state.surgicalAppointment.surgicalAppointmentAttributes?.find(
-            (attr) => attr.surgicalAppointmentAttributeType?.name === 'cleaningTime',
-          )?.value || '',
-        surgicalAssistant:
-          state.surgicalAppointment.surgicalAppointmentAttributes?.find(
-            (attr) => attr.surgicalAppointmentAttributeType?.name === 'surgicalAssistant',
-          )?.value || '',
-        anaesthetist:
-          state.surgicalAppointment.surgicalAppointmentAttributes?.find(
-            (attr) => attr.surgicalAppointmentAttributeType?.name === 'anaesthetist',
-          )?.value || '',
-        scrubNurse:
-          state.surgicalAppointment.surgicalAppointmentAttributes?.find(
-            (attr) => attr.surgicalAppointmentAttributeType?.name === 'scrubNurse',
-          )?.value || '',
-        circulatingNurse:
-          state.surgicalAppointment.surgicalAppointmentAttributes?.find(
-            (attr) => attr.surgicalAppointmentAttributeType?.name === 'circulatingNurse',
-          )?.value || '',
-        notes:
-          state.surgicalAppointment.surgicalAppointmentAttributes?.find(
-            (attr) => attr.surgicalAppointmentAttributeType?.name === 'notes',
-          )?.value || '',
+      };
+
+      const attributeNames =
+        surgicalAppointmentAttributes?.length > 0
+          ? surgicalAppointmentAttributes.map((a) => a.name)
+          : appointmentAttrs.map((a) => a.surgicalAppointmentAttributeType?.name).filter(Boolean);
+
+      attributeNames.forEach((name) => {
+        const found = appointmentAttrs.find(
+          (a) =>
+            a.surgicalAppointmentAttributeType?.name === name ||
+            a.surgicalAppointmentAttributeType?.uuid ===
+              surgicalAppointmentAttributes?.find((t) => t.name === name)?.uuid,
+        );
+        dynamicDefaults[name] = found?.value ?? '';
       });
+
+      reset(dynamicDefaults);
     }
   }, [state.surgicalAppointment]);
 
@@ -348,134 +292,58 @@ const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAd
               />
             )}
 
-            <Controller
-              name={'procedures'}
-              control={control}
-              render={({ field }) => {
-                return <TextInput {...field} id={`write-procedures`} labelText={t('procedures', 'Procedures')} />;
-              }}
-            />
+            {surgicalAppointmentAttributes
+              .sort((a, b) => a.sortWeight - b.sortWeight)
+              .map((attr) => {
+                const attributeLabel = attr.name === 'otherSurgeon' ? t('other-surgeon', 'Other Surgeon') : attr.name;
 
-            <Stack orientation="horizontal" gap={4}>
-              <Controller
-                name="estTimeHours"
-                control={control}
-                render={({ field }) => {
+                if (attr.format === SurgicalAppointmentInputTypeEnum.provider) {
                   return (
-                    <TextInput
-                      labelText={t('estimated-time-hours', 'Estimated Time (hours)')}
-                      type="number"
-                      min={0}
-                      width="50%"
-                      {...field}
-                      id={`write-estimated-time-hours`}
+                    <Controller
+                      name={attr.name}
+                      control={control}
+                      defaultValue=""
+                      render={({ field }) => {
+                        return (
+                          <Select id={`select-${attr.name}`} labelText={attributeLabel} {...field}>
+                            <SelectItem
+                              key="default"
+                              value=""
+                              text={
+                                attr.name === 'otherSurgeon'
+                                  ? t('select-other-surgeon', 'Select other surgeon')
+                                  : t('select-provider', 'Select provider')
+                              }
+                            />
+                            {providers &&
+                              providers.map((provider) => (
+                                <SelectItem key={provider.uuid} value={provider.uuid} text={provider.display} />
+                              ))}
+                          </Select>
+                        );
+                      }}
                     />
                   );
-                }}
-              />
-
-              <Controller
-                name="estTimeMinutes"
-                control={control}
-                render={({ field }) => {
-                  return (
-                    <TextInput
-                      labelText={t('estimated-time-minutes', 'Estimated Time (minutes)')}
-                      type="number"
-                      min={0}
-                      width="50%"
-                      {...field}
-                      id={`write-estimated-time-minutes`}
-                    />
-                  );
-                }}
-              />
-            </Stack>
-
-            <Controller
-              name="cleaningTime"
-              control={control}
-              render={({ field }) => {
+                }
                 return (
-                  <TextInput
-                    labelText={t('cleaning-time', 'Cleaning Time (minutes)')}
-                    type="number"
-                    min={0}
-                    width="50%"
-                    {...field}
-                    id={`write-cleaning-time`}
+                  <Controller
+                    name={attr.name}
+                    control={control}
+                    defaultValue=""
+                    render={({ field }) => {
+                      return (
+                        <TextInput
+                          {...field}
+                          id={`write-${attr.name}`}
+                          labelText={attr.name}
+                          type={attr.name.startsWith('estTime') || attr.name === 'cleaningTime' ? 'number' : 'text'}
+                          min={attr.name.startsWith('estTime') || attr.name === 'cleaningTime' ? 0 : undefined}
+                        />
+                      );
+                    }}
                   />
                 );
-              }}
-            />
-
-            <Controller
-              name={'otherSurgeon'}
-              control={control}
-              render={({ field }) => {
-                return (
-                  <Select id="select-other-surgeon" labelText={t('other-surgeon', 'Other Surgeon')} {...field}>
-                    <SelectItem key="default" value="" text={t('select-other-surgeon', 'Select other surgeon')} />
-                    {providers &&
-                      providers.map((provider) => (
-                        <SelectItem key={provider.uuid} value={provider.uuid} text={provider.display} />
-                      ))}
-                  </Select>
-                );
-              }}
-            />
-
-            <Controller
-              name="surgicalAssistant"
-              control={control}
-              render={({ field }) => {
-                return (
-                  <TextInput
-                    {...field}
-                    id={`write-surgical-assistant`}
-                    labelText={t('surgical-assistant', 'Surgical Assistant')}
-                  />
-                );
-              }}
-            />
-
-            <Controller
-              name="anaesthetist"
-              control={control}
-              render={({ field }) => {
-                return <TextInput {...field} id={`write-anaesthetist`} labelText={t('anaesthetist', 'Anaesthetist')} />;
-              }}
-            />
-
-            <Controller
-              name="scrubNurse"
-              control={control}
-              render={({ field }) => {
-                return <TextInput {...field} id={`write-scrub-nurse`} labelText={t('scrub-nurse', 'Scrub Nurse')} />;
-              }}
-            />
-
-            <Controller
-              name="circulatingNurse"
-              control={control}
-              render={({ field }) => {
-                return (
-                  <TextInput
-                    {...field}
-                    id={`write-circulating-nurse`}
-                    labelText={t('circulating-nurse', 'Circulating Nurse')}
-                  />
-                );
-              }}
-            />
-
-            <Controller
-              name="notes"
-              control={control}
-              render={({ field }) => {
-                return <TextArea {...field} id={`write-notes`} labelText={t('notes', 'Notes')} />;
-              }}
-            />
+              })}
 
             <Stack orientation="horizontal" className={styles.submitButtonContainer} gap={4}>
               <Button type="submit" disabled={otfreeze}>

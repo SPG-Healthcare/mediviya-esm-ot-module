@@ -23,4 +23,10 @@ export enum FetchMethodEnum {
   POST = "POST"
 }
 
+export enum SurgicalAppointmentInputTypeEnum {
+  string = 'java.lang.String',
+  number = 'java.lang.String',
+  provider = 'org.openmrs.Provider',
+}
+
 export const otAdminRole = 'OT Admin'
