@@ -32,17 +32,6 @@ interface SurgicalAppointmentFormData {
 
 interface SurgicalAppointmentFormValues {
   [key: string]: string;
-  patient: string;
-  procedure: string;
-  estTimeHours: string;
-  estTimeMinutes: string;
-  cleaningTime: string;
-  otherSurgeon: string;
-  surgicalAssistant: string;
-  anaesthetist: string;
-  scrubNurse: string;
-  circulatingNurse: string;
-  notes: string;
 }
 
 const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAdmin, state, closeWorkspace }) => {
@@ -64,19 +53,15 @@ const SurgicalAppointmentForm: React.FC<SurgicalAppointmentFormData> = ({ isOtAd
 
   const { control, handleSubmit, resetField, reset } = useForm<SurgicalAppointmentFormValues>({
     mode: 'onSubmit',
-    defaultValues: {
-      patient: '',
-      procedure: '',
-      estTimeHours: '',
-      estTimeMinutes: '',
-      cleaningTime: '',
-      otherSurgeon: '',
-      surgicalAssistant: '',
-      anaesthetist: '',
-      scrubNurse: '',
-      circulatingNurse: '',
-      notes: '',
-    },
+    defaultValues: surgicalAppointmentAttributes?.length
+      ? surgicalAppointmentAttributes.reduce(
+          (acc, attr) => {
+            if (attr?.name) acc[attr.name] = '';
+            return acc;
+          },
+          { patient: '' } as Record<string, string>,
+        )
+      : { patient: '' },
   });
 
   const hasAvailableSlot = (data: SurgicalAppointmentFormValues) => {
