@@ -10,7 +10,13 @@ import styles from './root.scss';
 const Root: React.FC = () => {
   return (
     <main className={styles.container}>
-      <BrowserRouter basename={`${window.spaBase}/home/operation-theater`}>
+      <BrowserRouter
+        basename={`${window.spaBase}/home/operation-theater`}
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <Routes>
           {/* <Route path="/" element={<SurgicalQueues />} /> */}
           <Route path="/ot-scheduling" element={<OtSchedulingPage />} />
